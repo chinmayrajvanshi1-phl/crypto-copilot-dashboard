@@ -1,5 +1,6 @@
-import re
 import html
+import re
+
 import pandas as pd
 import streamlit as st
 
@@ -12,9 +13,9 @@ def normalize_text(text):
     text = text.replace("\u00a0", " ")
     text = text.replace("–", "-")
     text = text.replace("—", "-")
-    text = re.sub(r'[ \t]+', ' ', text)
-    text = re.sub(r' *\n *', '\n', text)
-    text = re.sub(r'\n{3,}', '\n\n', text)
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r" *\n *", "\n", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
 
 
@@ -37,7 +38,7 @@ def format_pct(value):
 
 
 def extract_amount_from_prompt(prompt):
-    matches = re.findall(r'\$?\s?(\d+(?:\.\d+)?)', prompt.lower())
+    matches = re.findall(r"\$?\s?(\d+(?:\.\d+)?)", prompt.lower())
     if matches:
         try:
             return float(matches[0])
@@ -111,9 +112,11 @@ def build_comparison_summary_text(best_coin, worst_coin, avg_return, start_date,
 
 def build_ai_context(page_name, page_summary, extra_context, history_key):
     history = st.session_state.get(history_key, [])
-    history_text = "\n".join(
-        [f"{msg['role']}: {msg['content']}" for msg in history[-6:]]
-    ) if history else "No prior conversation."
+    history_text = (
+        "\n".join([f"{msg['role']}: {msg['content']}" for msg in history[-6:]])
+        if history
+        else "No prior conversation."
+    )
 
     return f"""
 You are Crypto Copilot, a conversational AI assistant inside a crypto analytics dashboard.
@@ -209,7 +212,7 @@ def render_plain_text_box(text, background="#eef4ff", border="#d9e6ff", color="#
             font-size:18px;
             line-height:1.6;
             white-space:normal;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         ">
             {escaped}
         </div>
@@ -227,7 +230,7 @@ def render_chat_text(text):
             white-space:normal;
             line-height:1.7;
             font-size:1rem;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         ">
             {escaped}
         </div>

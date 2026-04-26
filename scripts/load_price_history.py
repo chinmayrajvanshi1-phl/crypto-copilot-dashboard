@@ -6,14 +6,15 @@ from sqlalchemy import create_engine
 
 load_dotenv()
 
-db_host = os.getenv("DB_HOST")
-db_port = os.getenv("DB_PORT")
-db_name = os.getenv("DB_NAME")
-db_user = os.getenv("DB_USER")
-db_password = os.getenv("DB_PASSWORD")
+database_url = os.getenv("DATABASE_URL")
+if not database_url:
+    raise ValueError("DATABASE_URL is missing from .env")
 
-database_url = f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-engine = create_engine(database_url)
+engine = create_engine(
+    database_url,
+    pool_pre_ping=True,
+    pool_recycle=300
+)
 
 coin_id = "bitcoin"
 days = 30
@@ -27,16 +28,20 @@ params = {
 
 response = requests.get(url, params=params, timeout=30)
 print("Status code:", response.status_code)
+response.raise_for_status()
 
 data = response.json()
+prices = data.get("prices", [])
 
-prices = data["prices"]
+if not prices:
+    print("No price data returned.")
+    raise SystemExit()
 
 df = pd.DataFrame(prices, columns=["price_timestamp", "price"])
-df["price_timestamp"] = pd.to_datetime(df["price_timestamp"], unit="ms")
+df["price_timestamp"] = pd.to_datetime(df["price_timestamp"], unit="ms", utc=True)
 df["coin_id"] = coin_id
-
 df = df[["coin_id", "price_timestamp", "price"]]
+df = df.drop_duplicates(subset=["coin_id", "price_timestamp"]).copy()
 
 print("\nPreview of history data to load:")
 print(df.head())

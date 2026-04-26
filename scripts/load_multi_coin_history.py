@@ -6,13 +6,10 @@ from sqlalchemy import create_engine
 
 load_dotenv()
 
-db_host = os.getenv("DB_HOST")
-db_port = os.getenv("DB_PORT")
-db_name = os.getenv("DB_NAME")
-db_user = os.getenv("DB_USER")
-db_password = os.getenv("DB_PASSWORD")
+database_url = os.getenv("DATABASE_URL")
+if not database_url:
+    raise ValueError("DATABASE_URL is missing from .env")
 
-database_url = f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 engine = create_engine(database_url)
 
 coin_ids = ["bitcoin", "ethereum", "solana", "binancecoin", "ripple"]

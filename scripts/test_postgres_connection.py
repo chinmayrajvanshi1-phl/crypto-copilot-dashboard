@@ -4,18 +4,18 @@ from sqlalchemy import create_engine, text
 
 load_dotenv()
 
-db_host = os.getenv("DB_HOST")
-db_port = os.getenv("DB_PORT")
-db_name = os.getenv("DB_NAME")
-db_user = os.getenv("DB_USER")
-db_password = os.getenv("DB_PASSWORD")
+database_url = os.getenv("DATABASE_URL")
+if not database_url:
+    raise ValueError("DATABASE_URL is missing from .env")
 
-database_url = f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-
-print("Connecting to:", database_url.replace(db_password if db_password else "", "****"))
+print("Connecting to DATABASE_URL")
 
 try:
-    engine = create_engine(database_url)
+    engine = create_engine(
+        database_url,
+        pool_pre_ping=True,
+        pool_recycle=300
+    )
 
     with engine.connect() as connection:
         result = connection.execute(text("SELECT version();"))

@@ -3,16 +3,14 @@ import requests
 import pandas as pd
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
+from datetime import datetime, timezone
 
 load_dotenv()
 
-db_host = os.getenv("DB_HOST")
-db_port = os.getenv("DB_PORT")
-db_name = os.getenv("DB_NAME")
-db_user = os.getenv("DB_USER")
-db_password = os.getenv("DB_PASSWORD")
+database_url = os.getenv("DATABASE_URL")
+if not database_url:
+    raise ValueError("DATABASE_URL is missing from .env")
 
-database_url = f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 engine = create_engine(database_url)
 
 url = "https://api.coingecko.com/api/v3/coins/markets"
@@ -28,6 +26,7 @@ params = {
 
 response = requests.get(url, params=params, timeout=30)
 print("Status code:", response.status_code)
+response.raise_for_status()
 
 data = response.json()
 df = pd.DataFrame(data)
@@ -42,10 +41,8 @@ df = df[[
     "price_change_percentage_24h"
 ]].copy()
 
-df = df.rename(columns={
-    "id": "coin_id"
-})
-
+df = df.rename(columns={"id": "coin_id"})
+df["snapshot_time"] = datetime.now(timezone.utc)
 print("\nPreview of data to load:")
 print(df.head())
 

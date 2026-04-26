@@ -1,22 +1,29 @@
 # Crypto Copilot Dashboard
 
-An interactive crypto analytics dashboard built with Streamlit, PostgreSQL, Plotly, and OpenAI. The app allows users to explore live market data, review coin-level price history, compare multiple cryptocurrencies, and ask AI-powered questions grounded in dashboard context.
+An interactive crypto analytics dashboard built with Streamlit, PostgreSQL, Plotly, and OpenAI. The app allows users to explore live crypto market data, review coin-level price history, compare multiple cryptocurrencies, and ask AI-powered questions grounded in the visible dashboard context.
 
 ## Project Overview
 
-Crypto Copilot Dashboard is designed as an end-to-end analytics project that combines data engineering, dashboard development, forecasting, and AI-assisted exploration in a single application.
+Crypto Copilot Dashboard is an end-to-end analytics project that combines:
 
-The project pulls cryptocurrency data, stores it in PostgreSQL, visualizes key market trends in Streamlit, and provides contextual AI summaries and question answering across different dashboard views.
+- data collection from the CoinGecko API
+- cloud database storage in PostgreSQL
+- interactive dashboard development in Streamlit
+- simple trend-based forecasting
+- AI-assisted Q&A based on dashboard context
+
+The project pulls cryptocurrency market and history data, stores it in PostgreSQL, visualizes market behavior in Streamlit, and provides contextual summaries and follow-up question support through OpenAI.
 
 ## Features
 
-- Live market overview using the latest coin snapshot data
-- Coin Detail page with historical price trends and simple forecast projection
-- Comparison page for analyzing multiple coins across a selected date range
-- Date range filter for selecting how far back to analyze data
-- AI-powered summaries and Q&A grounded in visible dashboard data
-- CSV export for selected comparison results
-- Modular code structure with separate app and utility logic
+- Live market overview using the latest market snapshot data
+- Coin detail view with historical price trends and short-horizon forecast
+- Multi-coin comparison using raw prices or normalized performance
+- Date range filtering for historical analysis
+- AI-powered summaries and question answering grounded in visible dashboard data
+- CSV export for comparison results
+- Modular project structure with separate app and script files
+- PostgreSQL-backed storage suitable for local or cloud deployment
 
 ## Tech Stack
 
@@ -28,7 +35,8 @@ The project pulls cryptocurrency data, stores it in PostgreSQL, visualizes key m
 - NumPy
 - Plotly
 - OpenAI API
-- Python Dotenv
+- python-dotenv
+- CoinGecko API
 
 ## Project Structure
 
@@ -50,21 +58,27 @@ crypto-copilot-dashboard/
 │
 ├── assets/
 │   └── screenshots/
+│       ├── 1.png
+│       ├── 2.png
+│       └── 3.png
 │
 ├── .env.example
 ├── .gitignore
 ├── README.md
-├── requirements.txt
-└── .env
+└── requirements.txt
 ```
 
 ## How It Works
 
-The application reads crypto market and price history data from PostgreSQL and uses Streamlit to present the data through interactive tabs and filters.
+The project uses PostgreSQL as the data layer and Streamlit as the application layer.
 
-Each dashboard tab supports context-aware AI interaction. Instead of answering from general internet knowledge, the assistant uses the currently visible dashboard context to explain metrics, summarize trends, and respond to follow-up questions.
+1. Coin market and historical price data are fetched from CoinGecko.
+2. The data is stored in PostgreSQL tables.
+3. The Streamlit app reads the latest market data and historical price data from PostgreSQL.
+4. Users can filter, compare, and explore the data through dashboard tabs.
+5. AI summaries and chat responses are generated using the current dashboard context.
 
-## Setup Instructions
+## Local Setup
 
 ### 1. Clone the repository
 
@@ -75,7 +89,7 @@ cd crypto-copilot-dashboard
 
 ### 2. Create and activate a virtual environment
 
-On Mac/Linux:
+On macOS/Linux:
 
 ```bash
 python3 -m venv .venv
@@ -97,41 +111,56 @@ pip install -r requirements.txt
 
 ### 4. Create your environment file
 
-Create a `.env` file in the project root and copy the structure from `.env.example`.
+Create a `.env` file in the project root using `.env.example` as the template.
 
 Example:
 
 ```env
+DATABASE_URL=your_postgresql_connection_string
 OPENAI_API_KEY=your_openai_api_key_here
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=crypto_copilot
-DB_USER=your_postgres_username
-DB_PASSWORD=your_postgres_password
+COINGECKO_DEMO_API_KEY=your_coingecko_demo_api_key_here
 ```
 
 ### 5. Set up the database
 
-Run the database setup and data loading scripts as needed:
+Run the database setup and data loading scripts:
 
 ```bash
-python scripts/create_tables.py
 python scripts/test_postgres_connection.py
+python scripts/create_tables.py
 python scripts/load_market_snapshot.py
-python scripts/load_multi_coin_history.py
-```
-
-Depending on your workflow, you may also use:
-
-```bash
-python scripts/load_price_history.py
 python scripts/load_top30_coin_history.py
 ```
 
-### 6. Run the app
+Optional scripts:
+
+```bash
+python scripts/load_price_history.py
+python scripts/load_multi_coin_history.py
+python scripts/fetch_coingecko_test.py
+```
+
+### 6. Run the app locally
 
 ```bash
 streamlit run app/main.py
+```
+
+## Streamlit Cloud Deployment Notes
+
+For deployment on Streamlit Community Cloud:
+
+- connect the GitHub repository to Streamlit Community Cloud
+- deploy from the correct branch
+- add your secrets in the Streamlit app settings
+- do not commit your real `.env` file to GitHub
+
+Required deployed secrets:
+
+```toml
+DATABASE_URL="your_postgresql_connection_string"
+OPENAI_API_KEY="your_openai_api_key_here"
+COINGECKO_DEMO_API_KEY="your_coingecko_demo_api_key_here"
 ```
 
 ## Dashboard Pages
@@ -140,15 +169,15 @@ streamlit run app/main.py
 Displays the latest market snapshot, top coin, filtered market capitalization, total volume, and average 24-hour change.
 
 ### Coin Detail
-Shows a selected coin’s current stats, historical price trend, and a simple short-horizon forecast.
+Shows the selected coin’s current metrics, historical price trend, and simple short-horizon forecast.
 
 ### Comparison
-Compares multiple selected coins using either raw prices or normalized performance over a chosen time range.
+Compares multiple selected coins using raw price mode or normalized performance over the chosen date range.
 
 ### AI Insights
-Provides AI-powered explanations and answers based on the dashboard context and selected filters.
+Provides AI-powered explanations and follow-up answers based on the current dashboard context.
 
-## Example Questions You Can Ask
+## Example Questions
 
 - What is the filtered market cap?
 - How much did Bitcoin change in the last 5 days?
@@ -171,20 +200,20 @@ Provides AI-powered explanations and answers based on the dashboard context and 
 
 This project demonstrates:
 
-- Building an end-to-end analytics workflow using Python and PostgreSQL
-- Designing interactive dashboards in Streamlit
-- Creating reusable app architecture with modular Python files
-- Using Plotly for exploratory analysis and trend visualization
-- Integrating AI into analytics workflows with grounded context
-- Improving user experience through debugging, formatting fixes, and iterative enhancement
+- building an end-to-end analytics workflow using Python and PostgreSQL
+- designing interactive dashboards in Streamlit
+- structuring a modular analytics app with reusable Python utilities
+- visualizing market trends with Plotly
+- integrating AI into an analytics workflow using grounded app context
+- adapting a local database project to a cloud PostgreSQL deployment
 
 ## Future Improvements
 
-- Deploy the app to Streamlit Community Cloud
-- Add stronger forecasting methods
-- Add automated data refresh jobs
-- Expand AI question handling for more coin-specific and comparative prompts
-- Convert the tabbed layout into a full multipage Streamlit app
+- automate scheduled data refresh jobs
+- add stronger forecasting models
+- expand AI prompt handling for more coin-specific analysis
+- improve duplicate-safe historical loading with upsert logic
+- convert the app into a multi-page Streamlit architecture
 
 ## Notes
 

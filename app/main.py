@@ -27,7 +27,7 @@ from ai_utils import (
 load_dotenv()
 
 st.set_page_config(
-    page_title="AI Crypto Copilot Dashboard- By Chinmay Rajvanshi",
+    page_title="AI Crypto Dashboard- By Chinmay Rajvanshi",
     layout="wide"
 )
 
@@ -48,6 +48,22 @@ def get_openai_client():
 
 engine = get_engine()
 client = get_openai_client()
+
+def render_header():
+    linkedin_url = "https://www.linkedin.com/in/chinmayrajvanshi/"
+    linkedin_logo = "https://cdn-icons-png.flaticon.com/512/174/174857.png"
+
+    st.markdown(
+        f"""
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:0.25rem;">
+            <h1 style="margin:0; font-size:2.1rem;">AI Crypto Dashboard- By Chinmay Rajvanshi</h1>
+            <a href="{linkedin_url}" target="_blank" style="display:flex; align-items:center;">
+                <img src="{linkedin_logo}" width="28" style="display:block;" />
+            </a>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 
 @st.cache_data
@@ -777,7 +793,7 @@ def main():
     market_df = load_latest_market_data()
     history_df = load_history_data()
 
-    st.title("AI Crypto Copilot Dashboard- By Chinmay Rajvanshi")
+    render_header()
     st.caption(
         "AI-powered interactive crypto analytics dashboard with built-in insights and a conversational assistant "
         "that answers user queries, leveraging CoinGecko, PostgreSQL, Streamlit, Plotly, and forecasting capabilities."

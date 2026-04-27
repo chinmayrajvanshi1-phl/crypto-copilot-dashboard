@@ -26,7 +26,7 @@ from ai_utils import (
 
 load_dotenv()
 
-st.set_page_config(page_title="Crypto Copilot Dashboard", layout="wide")
+st.set_page_config(page_title="AI Crypto Copilot Dashboard- By Chinmay Rajvanshi", layout="wide")
 
 
 def get_engine():
@@ -695,8 +695,8 @@ def main():
     market_df = load_latest_market_data()
     history_df = load_history_data()
 
-    st.title("Crypto Copilot Dashboard")
-    st.caption("Interactive crypto analytics dashboard using CoinGecko, PostgreSQL, Streamlit, Plotly, forecasting, and AI")
+    st.title("AI Crypto Copilot Dashboard- By Chinmay Rajvanshi")
+    st.caption("AI-powered interactive crypto analytics dashboard with built-in insights and a conversational assistant that answers user queries, leveraging CoinGecko, PostgreSQL, Streamlit, Plotly, and forecasting capabilities.")
 
     if market_df.empty:
         st.warning("No market data found in the database.")

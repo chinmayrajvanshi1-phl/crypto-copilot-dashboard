@@ -27,7 +27,7 @@ from ai_utils import (
 load_dotenv()
 
 st.set_page_config(
-    page_title="AI Crypto Dashboard- By Chinmay Rajvanshi",
+    page_title="AI Crypto Dashboard - By Chinmay Rajvanshi",
     layout="wide"
 )
 
@@ -56,7 +56,7 @@ def render_header():
     st.markdown(
         f"""
         <div style="display:flex; align-items:center; gap:12px; margin-bottom:0.25rem;">
-            <h1 style="margin:0; font-size:2.1rem;">AI Crypto Dashboard- By Chinmay Rajvanshi</h1>
+            <h1 style="margin:0; font-size:2.1rem;">AI Crypto Dashboard - By Chinmay Rajvanshi</h1>
             <a href="{linkedin_url}" target="_blank" style="display:flex; align-items:center;">
                 <img src="{linkedin_logo}" width="28" style="display:block;" />
             </a>

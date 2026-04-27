@@ -26,7 +26,10 @@ from ai_utils import (
 
 load_dotenv()
 
-st.set_page_config(page_title="AI Crypto Copilot Dashboard- By Chinmay Rajvanshi", layout="wide")
+st.set_page_config(
+    page_title="AI Crypto Copilot Dashboard- By Chinmay Rajvanshi",
+    layout="wide"
+)
 
 
 def get_engine():
@@ -91,43 +94,25 @@ def init_chat_state():
         if chat_key not in st.session_state:
             st.session_state[chat_key] = []
 
+    if "selected_page" not in st.session_state:
+        st.session_state["selected_page"] = "Overview"
 
-def get_sidebar_filters(market_df, history_df):
-    st.sidebar.header("Filters")
 
-    coin_options = sorted(market_df["coin_id"].unique().tolist())
-    selected_coin = st.sidebar.selectbox("Choose a coin", coin_options)
-
-    top_n = st.sidebar.selectbox("Show top N coins", [5, 10, 15, 25, 30], index=4)
-
-    sort_by = st.sidebar.selectbox(
-        "Sort market table by",
-        ["market_cap", "current_price", "total_volume", "price_change_percentage_24h"]
+def render_page_navigation():
+    selected = st.segmented_control(
+        "Navigate pages",
+        options=["Overview", "Coin Detail", "Comparison", "AI Insights"],
+        default=st.session_state["selected_page"],
+        key="page_nav_control"
     )
 
-    comparison_coins = st.sidebar.multiselect(
-        "Choose coins to compare",
-        options=coin_options,
-        default=["bitcoin", "ethereum", "solana"]
-        if all(c in coin_options for c in ["bitcoin", "ethereum", "solana"])
-        else coin_options[:3]
-    )
+    if selected:
+        st.session_state["selected_page"] = selected
 
-    chart_mode = st.sidebar.radio(
-        "Comparison chart mode",
-        ["Raw Price", "Normalized Performance"],
-        index=1
-    )
+    return st.session_state["selected_page"]
 
-    min_history_date = history_df["price_timestamp"].min().date()
-    max_history_date = history_df["price_timestamp"].max().date()
 
-    preset_range = st.sidebar.segmented_control(
-        "Quick range",
-        options=["7D", "14D", "30D", "90D", "180D", "365D", "Max", "Custom"],
-        default="30D"
-    )
-
+def resolve_date_range(preset_range, min_history_date, max_history_date, label):
     if preset_range == "7D":
         start_date = max(min_history_date, max_history_date - timedelta(days=7))
         end_date = max_history_date
@@ -151,7 +136,7 @@ def get_sidebar_filters(market_df, history_df):
         end_date = max_history_date
     else:
         selected_date_range = st.sidebar.date_input(
-            "Select history date range",
+            label,
             value=(min_history_date, max_history_date),
             min_value=min_history_date,
             max_value=max_history_date
@@ -163,22 +148,119 @@ def get_sidebar_filters(market_df, history_df):
             start_date = min_history_date
             end_date = max_history_date
 
-    forecast_horizon = st.sidebar.selectbox(
-        "Forecast horizon",
-        [1, 2, 3, 5, 7],
-        index=2
-    )
+    return start_date, end_date
 
-    return {
-        "selected_coin": selected_coin,
-        "top_n": top_n,
-        "sort_by": sort_by,
-        "comparison_coins": comparison_coins,
-        "chart_mode": chart_mode,
-        "start_date": start_date,
-        "end_date": end_date,
-        "forecast_horizon": forecast_horizon,
+
+def get_sidebar_filters(market_df, history_df, selected_page):
+    coin_options = sorted(market_df["coin_id"].unique().tolist())
+    min_history_date = history_df["price_timestamp"].min().date()
+    max_history_date = history_df["price_timestamp"].max().date()
+
+    st.sidebar.header("Filters")
+    st.sidebar.caption(f"Filters available for: {selected_page}")
+
+    filters = {
+        "selected_coin": coin_options[0] if coin_options else None,
+        "top_n": 30,
+        "sort_by": "market_cap",
+        "comparison_coins": ["bitcoin", "ethereum", "solana"]
+        if all(c in coin_options for c in ["bitcoin", "ethereum", "solana"])
+        else coin_options[:3],
+        "chart_mode": "Normalized Performance",
+        "start_date": max(min_history_date, max_history_date - timedelta(days=30)),
+        "end_date": max_history_date,
+        "forecast_horizon": 3,
     }
+
+    if selected_page == "Overview":
+        filters["top_n"] = st.sidebar.selectbox(
+            "Show top N coins",
+            [5, 10, 15, 25, 30],
+            index=4
+        )
+
+        filters["sort_by"] = st.sidebar.selectbox(
+            "Sort market table by",
+            ["market_cap", "current_price", "total_volume", "price_change_percentage_24h"]
+        )
+
+    elif selected_page == "Coin Detail":
+        filters["selected_coin"] = st.sidebar.selectbox(
+            "Choose a coin",
+            coin_options
+        )
+
+        preset_range = st.sidebar.segmented_control(
+            "Quick range",
+            options=["7D", "14D", "30D", "90D", "180D", "365D", "Max", "Custom"],
+            default="30D"
+        )
+
+        filters["start_date"], filters["end_date"] = resolve_date_range(
+            preset_range,
+            min_history_date,
+            max_history_date,
+            "Select history date range"
+        )
+
+        filters["forecast_horizon"] = st.sidebar.selectbox(
+            "Forecast horizon",
+            [1, 2, 3, 5, 7],
+            index=2
+        )
+
+    elif selected_page == "Comparison":
+        st.sidebar.subheader("Choose coins to compare")
+
+        selected_compare = []
+        default_compare = ["bitcoin", "ethereum", "solana"]
+        default_compare = [c for c in default_compare if c in coin_options]
+
+        for coin in coin_options:
+            checked = st.sidebar.checkbox(
+                coin,
+                value=coin in default_compare,
+                key=f"compare_{coin}"
+            )
+            if checked:
+                selected_compare.append(coin)
+
+        filters["comparison_coins"] = selected_compare
+
+        filters["chart_mode"] = st.sidebar.radio(
+            "Comparison chart mode",
+            ["Raw Price", "Normalized Performance"],
+            index=1
+        )
+
+        preset_range = st.sidebar.segmented_control(
+            "Quick range",
+            options=["7D", "14D", "30D", "90D", "180D", "365D", "Max", "Custom"],
+            default="30D"
+        )
+
+        filters["start_date"], filters["end_date"] = resolve_date_range(
+            preset_range,
+            min_history_date,
+            max_history_date,
+            "Select comparison date range"
+        )
+
+    elif selected_page == "AI Insights":
+        preset_range = st.sidebar.segmented_control(
+            "Quick range",
+            options=["7D", "14D", "30D", "90D", "180D", "365D", "Max", "Custom"],
+            default="30D"
+        )
+
+        filters["start_date"], filters["end_date"] = resolve_date_range(
+            preset_range,
+            min_history_date,
+            max_history_date,
+            "Select AI insights date range"
+        )
+
+    return filters
 
 
 def filter_history_data(history_df, start_date, end_date):
@@ -696,7 +778,10 @@ def main():
     history_df = load_history_data()
 
     st.title("AI Crypto Copilot Dashboard- By Chinmay Rajvanshi")
-    st.caption("AI-powered interactive crypto analytics dashboard with built-in insights and a conversational assistant that answers user queries, leveraging CoinGecko, PostgreSQL, Streamlit, Plotly, and forecasting capabilities.")
+    st.caption(
+        "AI-powered interactive crypto analytics dashboard with built-in insights and a conversational assistant "
+        "that answers user queries, leveraging CoinGecko, PostgreSQL, Streamlit, Plotly, and forecasting capabilities."
+    )
 
     if market_df.empty:
         st.warning("No market data found in the database.")
@@ -706,7 +791,9 @@ def main():
         st.warning("No history data found in the database.")
         st.stop()
 
-    filters = get_sidebar_filters(market_df, history_df)
+    selected_page = render_page_navigation()
+
+    filters = get_sidebar_filters(market_df, history_df, selected_page)
 
     filtered_history_df = filter_history_data(
         history_df,
@@ -722,11 +809,7 @@ def main():
 
     metrics = build_overview_metrics(market_df, filtered_market_df)
 
-    overview_tab, detail_tab, comparison_tab, ai_tab = st.tabs(
-        ["Overview", "Coin Detail", "Comparison", "AI Insights"]
-    )
-
-    with overview_tab:
+    if selected_page == "Overview":
         render_overview_tab(
             filtered_market_df,
             metrics,
@@ -735,7 +818,7 @@ def main():
             filters["end_date"]
         )
 
-    with detail_tab:
+    elif selected_page == "Coin Detail":
         render_detail_tab(
             market_df,
             filtered_history_df,
@@ -745,7 +828,7 @@ def main():
             filters["forecast_horizon"]
         )
 
-    with comparison_tab:
+    elif selected_page == "Comparison":
         render_comparison_tab(
             market_df,
             filtered_history_df,
@@ -755,7 +838,7 @@ def main():
             filters["end_date"]
         )
 
-    with ai_tab:
+    elif selected_page == "AI Insights":
         render_ai_insights_tab(
             metrics,
             filtered_market_df,
@@ -766,4 +849,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
